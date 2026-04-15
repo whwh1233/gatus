@@ -1,0 +1,13 @@
+[Unit]
+Description=Gatus - AI Channel Status Monitor
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/gatus
+ExecStart=/opt/gatus/start.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
