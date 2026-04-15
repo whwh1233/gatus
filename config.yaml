@@ -1,53 +1,27 @@
+storage:
+  type: sqlite
+  path: /tmp/gatus.db
+
+ui:
+  title: "AI渠道状态"
+  header: "AI渠道状态"
+
+default-endpoint: &defaults
+  url: "https://api.pubwhere.cn/v1/models"
+  method: GET
+  interval: 60s
+  conditions:
+    - "[STATUS] == 200"
+
 endpoints:
-  - name: front-end
-    group: core
-    url: "https://twin.sh/health"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-      - "[BODY].status == UP"
-      - "[RESPONSE_TIME] < 150"
+  - <<: *defaults
+    name: claudecodemax
+    group: claudecodemax
+    headers:
+      Authorization: "Bearer ${CLAUDE_CODEMAX_KEY}"
 
-  - name: back-end
-    group: core
-    url: "https://example.org/"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-      - "[CERTIFICATE_EXPIRATION] > 48h"
-
-  - name: monitoring
-    group: internal
-    url: "https://example.org/"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-
-  - name: nas
-    group: internal
-    url: "https://example.org/"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-
-  - name: example-dns-query
-    url: "8.8.8.8" # Address of the DNS server to use
-    interval: 5m
-    dns:
-      query-name: "example.com"
-      query-type: "A"
-    conditions:
-      - "[BODY] == pat(*.*.*.*)"  # Matches any IPv4 address
-      - "[DNS_RCODE] == NOERROR"
-
-  - name: icmp-ping
-    url: "icmp://example.org"
-    interval: 1m
-    conditions:
-      - "[CONNECTED] == true"
-
-  - name: check-domain-expiration
-    url: "https://example.org/"
-    interval: 1h
-    conditions:
-      - "[DOMAIN_EXPIRATION] > 720h"
+  - <<: *defaults
+    name: gpt5.4
+    group: gpt5.4
+    headers:
+      Authorization: "Bearer ${GPT54_KEY}"

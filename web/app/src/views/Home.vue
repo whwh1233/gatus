@@ -12,12 +12,12 @@
               variant="ghost" 
               size="icon" 
               @click="toggleShowAverageResponseTime" 
-              :title="showAverageResponseTime ? 'Show min-max response time' : 'Show average response time'"
+              :title="showAverageResponseTime ? '显示最小-最大响应时间' : '显示平均响应时间'"
             >
               <Activity v-if="showAverageResponseTime" class="h-5 w-5" />
               <Timer v-else class="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" @click="refreshData" title="Refresh data">
+            <Button variant="ghost" size="icon" @click="refreshData" title="刷新数据">
               <RefreshCw class="h-5 w-5" />
             </Button>
           </div>
@@ -39,13 +39,13 @@
         <Loading size="lg" />
       </div>
 
-      <div v-else-if="filteredEndpoints.length === 0 && filteredSuites.length === 0" class="text-center py-20">
+      <div v-else-if="filtered服务端点.length === 0 && filtered套件.length === 0" class="text-center py-20">
         <AlertCircle class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 class="text-lg font-semibold mb-2">No endpoints or suites found</h3>
+        <h3 class="text-lg font-semibold mb-2">未找到服务端点或套件</h3>
         <p class="text-muted-foreground">
-          {{ searchQuery || showOnlyFailing || showRecentFailures 
-            ? 'Try adjusting your filters' 
-            : 'No endpoints or suites are configured' }}
+          {{ searchQuery || showOnlyFailing || showRecentFailures
+            ? '请尝试调整筛选条件'
+            : '暂未配置任何服务端点或套件' }}
         </p>
       </div>
 
@@ -64,19 +64,22 @@
                 <h2 class="text-xl font-semibold text-foreground">{{ group }}</h2>
               </div>
               <div class="flex items-center gap-2">
-                <span v-if="calculateUnhealthyCount(items.endpoints) + calculateFailingSuitesCount(items.suites) > 0" 
-                      class="bg-red-600 text-white px-2 py-1 rounded-full text-sm font-medium">
-                  {{ calculateUnhealthyCount(items.endpoints) + calculateFailingSuitesCount(items.suites) }}
+                <span :class="[
+                  'px-2 py-1 rounded-full text-sm font-medium',
+                  calculateUnhealthyCount(items.endpoints) + calculateFailing套件Count(items.suites) > 0
+                    ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
+                    : 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                ]">
+                  {{ calculateHealthyCount(items.endpoints) }}/{{ items.endpoints.length + items.suites.length }} 正常
                 </span>
-                <CheckCircle v-else class="h-6 w-6 text-green-600" />
               </div>
             </div>
             
             <!-- Group Content -->
             <div v-if="uncollapsedGroups.has(group)" class="endpoint-group-content p-4">
-              <!-- Suites Section -->
+              <!-- 套件 Section -->
               <div v-if="items.suites.length > 0" class="mb-4">
-                <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Suites</h3>
+                <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">套件</h3>
                 <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   <SuiteCard
                     v-for="suite in items.suites"
@@ -88,9 +91,9 @@
                 </div>
               </div>
               
-              <!-- Endpoints Section -->
+              <!-- 服务端点 Section -->
               <div v-if="items.endpoints.length > 0">
-                <h3 v-if="items.suites.length > 0" class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Endpoints</h3>
+                <h3 v-if="items.suites.length > 0" class="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">服务端点</h3>
                 <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                   <EndpointCard
                     v-for="endpoint in items.endpoints"
@@ -108,12 +111,12 @@
         
         <!-- Regular view -->
         <div v-else>
-          <!-- Suites Section -->
-          <div v-if="filteredSuites.length > 0" class="mb-6">
-            <h2 class="text-lg font-semibold text-foreground mb-3">Suites</h2>
+          <!-- 套件 Section -->
+          <div v-if="filtered套件.length > 0" class="mb-6">
+            <h2 class="text-lg font-semibold text-foreground mb-3">套件</h2>
             <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <SuiteCard
-                v-for="suite in paginatedSuites"
+                v-for="suite in paginated套件"
                 :key="suite.key"
                 :suite="suite"
                 :maxResults="resultPageSize"
@@ -122,12 +125,12 @@
             </div>
           </div>
           
-          <!-- Endpoints Section -->
-          <div v-if="filteredEndpoints.length > 0">
-            <h2 v-if="filteredSuites.length > 0" class="text-lg font-semibold text-foreground mb-3">Endpoints</h2>
+          <!-- 服务端点 Section -->
+          <div v-if="filtered服务端点.length > 0">
+            <h2 v-if="filtered套件.length > 0" class="text-lg font-semibold text-foreground mb-3">服务端点</h2>
             <div class="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               <EndpointCard
-                v-for="endpoint in paginatedEndpoints"
+                v-for="endpoint in paginated服务端点"
                 :key="endpoint.key"
                 :endpoint="endpoint"
                 :maxResults="resultPageSize"
@@ -183,7 +186,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { Activity, Timer, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, CheckCircle } from 'lucide-vue-next'
+import { Activity, Timer, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import EndpointCard from '@/components/EndpointCard.vue'
 import SuiteCard from '@/components/SuiteCard.vue'
@@ -225,7 +228,7 @@ const sortBy = ref(localStorage.getItem('gatus:sort-by') || 'name')
 const uncollapsedGroups = ref(new Set())
 const resultPageSize = 50
 
-const filteredEndpoints = computed(() => {
+const filtered服务端点 = computed(() => {
   let filtered = [...endpointStatuses.value]
   
   if (searchQuery.value) {
@@ -269,7 +272,7 @@ const filteredEndpoints = computed(() => {
   return filtered
 })
 
-const filteredSuites = computed(() => {
+const filtered套件 = computed(() => {
   let filtered = [...(suiteStatuses.value || [])]
   
   if (searchQuery.value) {
@@ -313,27 +316,27 @@ const filteredSuites = computed(() => {
 })
 
 const totalPages = computed(() => {
-  return Math.ceil((filteredEndpoints.value.length + filteredSuites.value.length) / itemsPerPage)
+  return Math.ceil((filtered服务端点.value.length + filtered套件.value.length) / itemsPerPage)
 })
 
-const groupedEndpoints = computed(() => {
+const grouped服务端点 = computed(() => {
   if (!groupByGroup.value) {
     return null
   }
   
   const grouped = {}
-  filteredEndpoints.value.forEach(endpoint => {
-    const group = endpoint.group || 'No Group'
+  filtered服务端点.value.forEach(endpoint => {
+    const group = endpoint.group || '未分组'
     if (!grouped[group]) {
       grouped[group] = []
     }
     grouped[group].push(endpoint)
   })
   
-  // Sort groups alphabetically, with 'No Group' at the end
+  // Sort groups alphabetically, with '未分组' at the end
   const sortedGroups = Object.keys(grouped).sort((a, b) => {
-    if (a === 'No Group') return 1
-    if (b === 'No Group') return -1
+    if (a === '未分组') return 1
+    if (b === '未分组') return -1
     return a.localeCompare(b)
   })
   
@@ -353,8 +356,8 @@ const combinedGroups = computed(() => {
   const combined = {}
   
   // Add endpoints
-  filteredEndpoints.value.forEach(endpoint => {
-    const group = endpoint.group || 'No Group'
+  filtered服务端点.value.forEach(endpoint => {
+    const group = endpoint.group || '未分组'
     if (!combined[group]) {
       combined[group] = { endpoints: [], suites: [] }
     }
@@ -362,18 +365,18 @@ const combinedGroups = computed(() => {
   })
   
   // Add suites
-  filteredSuites.value.forEach(suite => {
-    const group = suite.group || 'No Group'
+  filtered套件.value.forEach(suite => {
+    const group = suite.group || '未分组'
     if (!combined[group]) {
       combined[group] = { endpoints: [], suites: [] }
     }
     combined[group].suites.push(suite)
   })
   
-  // Sort groups alphabetically, with 'No Group' at the end
+  // Sort groups alphabetically, with '未分组' at the end
   const sortedGroups = Object.keys(combined).sort((a, b) => {
-    if (a === 'No Group') return 1
-    if (b === 'No Group') return -1
+    if (a === '未分组') return 1
+    if (b === '未分组') return -1
     return a.localeCompare(b)
   })
   
@@ -385,26 +388,26 @@ const combinedGroups = computed(() => {
   return result
 })
 
-const paginatedEndpoints = computed(() => {
+const paginated服务端点 = computed(() => {
   if (groupByGroup.value) {
     // When grouping, we don't paginate
-    return groupedEndpoints.value
+    return grouped服务端点.value
   }
   
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return filteredEndpoints.value.slice(start, end)
+  return filtered服务端点.value.slice(start, end)
 })
 
-const paginatedSuites = computed(() => {
+const paginated套件 = computed(() => {
   if (groupByGroup.value) {
     // When grouping, we don't paginate
-    return filteredSuites.value
+    return filtered套件.value
   }
   
   const start = (currentPage.value - 1) * itemsPerPage
   const end = start + itemsPerPage
-  return filteredSuites.value.slice(start, end)
+  return filtered套件.value.slice(start, end)
 })
 
 const visiblePages = computed(() => {
@@ -490,6 +493,14 @@ const showTooltip = (result, event, action = 'hover') => {
   emit('showTooltip', result, event, action)
 }
 
+const calculateHealthyCount = (endpoints) => {
+  return endpoints.filter(endpoint => {
+    if (!endpoint.results || endpoint.results.length === 0) return true
+    const latestResult = endpoint.results[endpoint.results.length - 1]
+    return latestResult.success
+  }).length
+}
+
 const calculateUnhealthyCount = (endpoints) => {
   return endpoints.filter(endpoint => {
     if (!endpoint.results || endpoint.results.length === 0) return false
@@ -498,7 +509,7 @@ const calculateUnhealthyCount = (endpoints) => {
   }).length
 }
 
-const calculateFailingSuitesCount = (suites) => {
+const calculateFailing套件Count = (suites) => {
   return suites.filter(suite => {
     if (!suite.results || suite.results.length === 0) return false
     return !suite.results[suite.results.length - 1].success
@@ -533,11 +544,11 @@ const initializeCollapsedGroups = () => {
 }
 
 const dashboardHeading = computed(() => {
-  return window.config && window.config.dashboardHeading && window.config.dashboardHeading !== '{{ .UI.DashboardHeading }}' ? window.config.dashboardHeading : "Health Dashboard"
+  return window.config && window.config.dashboardHeading && window.config.dashboardHeading !== '{{ .UI.DashboardHeading }}' ? window.config.dashboardHeading : "服务健康状态"
 })
 
 const dashboardSubheading = computed(() => {
-  return window.config && window.config.dashboardSubheading && window.config.dashboardSubheading !== '{{ .UI.DashboardSubheading }}' ? window.config.dashboardSubheading : "Monitor the health of your endpoints in real-time"
+  return window.config && window.config.dashboardSubheading && window.config.dashboardSubheading !== '{{ .UI.DashboardSubheading }}' ? window.config.dashboardSubheading : "实时监控各服务端点的运行状态"
 })
 
 onMounted(() => {

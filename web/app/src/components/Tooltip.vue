@@ -10,92 +10,28 @@
     :style="`top: ${top}px; left: ${left}px;`"
   >
     <div v-if="result" class="space-y-2">
-      <!-- Status (for suite results) -->
-      <div v-if="isSuiteResult" class="flex items-center gap-2">
+      <!-- Status -->
+      <div class="flex items-center gap-2">
         <span :class="[
           'inline-block w-2 h-2 rounded-full',
           result.success ? 'bg-green-500' : 'bg-red-500'
         ]"></span>
         <span class="text-xs font-semibold">
-          {{ result.success ? 'Suite Passed' : 'Suite Failed' }}
+          {{ result.success ? '正常' : '异常' }}
         </span>
       </div>
 
       <!-- Timestamp -->
       <div>
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Timestamp</div>
+        <div class="text-xs font-semibold text-muted-foreground">检测时间</div>
         <div class="font-mono text-xs">{{ prettifyTimestamp(result.timestamp) }}</div>
-      </div>
-      
-      <!-- Suite Info (for suite results) -->
-      <div v-if="isSuiteResult && result.endpointResults">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Endpoints</div>
-        <div class="font-mono text-xs">
-          <span :class="successCount === endpointCount ? 'text-green-500' : 'text-yellow-500'">
-            {{ successCount }}/{{ endpointCount }} passed
-          </span>
-        </div>
-        <!-- Endpoint breakdown -->
-        <div v-if="result.endpointResults.length > 0" class="mt-1 space-y-0.5">
-          <div 
-            v-for="(endpoint, index) in result.endpointResults.slice(0, 5)" 
-            :key="index"
-            class="flex items-center gap-1 text-xs"
-          >
-            <span :class="endpoint.success ? 'text-green-500' : 'text-red-500'">
-              {{ endpoint.success ? '✓' : '✗' }}
-            </span>
-            <span class="truncate">{{ endpoint.name }}</span>
-            <span class="text-muted-foreground">({{ Math.trunc(endpoint.duration / 1000000) }}ms)</span>
-          </div>
-          <div v-if="result.endpointResults.length > 5" class="text-xs text-muted-foreground">
-            ... and {{ result.endpointResults.length - 5 }} more
-          </div>
-        </div>
-      </div>
-
-      <!-- Response Time -->
-      <div>
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {{ isSuiteResult ? 'Total Duration' : 'Response Time' }}
-        </div>
-        <div class="font-mono text-xs">
-          {{ Math.trunc(result.duration / 1000000) }}ms
-        </div>
-      </div>
-      
-      <!-- Conditions (for endpoint results) -->
-      <div v-if="!isSuiteResult && result.conditionResults && result.conditionResults.length">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Conditions</div>
-        <div class="font-mono text-xs space-y-0.5">
-          <div 
-            v-for="(conditionResult, index) in result.conditionResults" 
-            :key="index"
-            class="flex items-start gap-1"
-          >
-            <span :class="conditionResult.success ? 'text-green-500' : 'text-red-500'">
-              {{ conditionResult.success ? '✓' : '✗' }}
-            </span>
-            <span class="break-all">{{ conditionResult.condition }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Errors -->
-      <div v-if="result.errors && result.errors.length">
-        <div class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Errors</div>
-        <div class="font-mono text-xs space-y-0.5">
-          <div v-for="(error, index) in result.errors" :key="index" class="text-red-500">
-            • {{ error }}
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { prettifyTimestamp } from '@/utils/time'
 
@@ -122,21 +58,6 @@ const top = ref(0)
 const left = ref(0)
 const tooltip = ref(null)
 const targetElement = ref(null)
-
-// Computed properties
-const isSuiteResult = computed(() => {
-  return props.result && props.result.endpointResults !== undefined
-})
-
-const endpointCount = computed(() => {
-  if (!isSuiteResult.value || !props.result.endpointResults) return 0
-  return props.result.endpointResults.length
-})
-
-const successCount = computed(() => {
-  if (!isSuiteResult.value || !props.result.endpointResults) return 0
-  return props.result.endpointResults.filter(e => e.success).length
-})
 
 // Methods are imported from utils/time
 

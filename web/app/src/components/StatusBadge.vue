@@ -33,13 +33,13 @@ const variant = computed(() => {
 const label = computed(() => {
   switch (props.status) {
     case 'healthy':
-      return 'Healthy'
+      return '正常'
     case 'unhealthy':
-      return 'Unhealthy'
+      return '异常'
     case 'degraded':
-      return 'Degraded'
+      return '降级'
     default:
-      return 'Unknown'
+      return '未知'
   }
 })
 

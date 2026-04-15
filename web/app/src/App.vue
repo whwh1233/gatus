@@ -36,7 +36,7 @@
                 <div>
                   <h1 class="text-2xl font-bold tracking-tight">{{ header }}</h1>
                   <p v-if="buttons && buttons.length" class="text-sm text-muted-foreground">
-                    System Monitoring Dashboard
+                    系统监控面板
                   </p>
                 </div>
               </component>
@@ -96,13 +96,11 @@
       </main>
 
       <!-- Footer -->
-      <footer class="border-t mt-auto">
-        <div class="container mx-auto px-4 py-6 max-w-7xl">
-          <div class="flex flex-col items-center gap-4">
-            <div class="text-sm text-muted-foreground text-center">
-              Powered by <a href="https://gatus.io" target="_blank" class="font-medium text-emerald-800 hover:text-emerald-600">Gatus</a>
-            </div>
-            <Social />
+      <footer class="border-t mt-8">
+        <div class="container mx-auto px-4 py-4 max-w-7xl">
+          <div class="text-sm text-muted-foreground text-center space-y-1">
+            <div v-if="lastUpdated">最后更新于 {{ lastUpdated }}</div>
+            <div v-if="countdown > 0">将于 {{ formatCountdown(countdown) }} 后刷新</div>
           </div>
         </div>
       </footer>
@@ -126,7 +124,7 @@
             <div class="p-3 rounded-md bg-destructive/10 border border-destructive/20">
               <p class="text-sm text-destructive text-center">
                 <span v-if="route.query.error === 'access_denied'">
-                  You do not have access to this status page
+                  您没有访问此状态页面的权限
                 </span>
                 <span v-else>{{ route.query.error }}</span>
               </p>
@@ -141,7 +139,7 @@
             <Loading v-if="isOidcLoading" size="xs" />
             <template v-else>
               <LogIn class="mr-2 h-4 w-4" />
-              Login with OIDC
+              通过 OIDC 登录
             </template>
           </a>
         </CardContent>
@@ -159,7 +157,6 @@ import { useRoute } from 'vue-router'
 import { Menu, X, LogIn } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import Social from './components/Social.vue'
 import Tooltip from './components/Tooltip.vue'
 import Loading from './components/Loading.vue'
 
@@ -173,7 +170,11 @@ const tooltip = ref({})
 const mobileMenuOpen = ref(false)
 const isOidcLoading = ref(false)
 const tooltipIsPersistent = ref(false)
+const lastUpdated = ref('')
+const countdown = ref(0)
 let configInterval = null
+let countdownInterval = null
+const REFRESH_SECONDS = 300 // 5 minutes, matches default refresh interval
 
 // Computed properties
 const logo = computed(() => {
@@ -193,10 +194,36 @@ const buttons = computed(() => {
 })
 
 const loginSubtitle = computed(() => {
-  return window.config && window.config.loginSubtitle && window.config.loginSubtitle !== '{{ .UI.LoginSubtitle }}' ? window.config.loginSubtitle : "System Monitoring Dashboard"
+  return window.config && window.config.loginSubtitle && window.config.loginSubtitle !== '{{ .UI.LoginSubtitle }}' ? window.config.loginSubtitle : "系统监控面板"
 })
 
 // Methods
+const formatCountdown = (seconds) => {
+  const m = String(Math.floor(seconds / 60)).padStart(2, '0')
+  const s = String(seconds % 60).padStart(2, '0')
+  return `${m}:${s}`
+}
+
+const updateLastUpdated = () => {
+  lastUpdated.value = new Date().toLocaleString('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  })
+  // Read current refresh interval from localStorage
+  const stored = localStorage.getItem('gatus:refresh-interval')
+  const refreshSeconds = stored ? parseInt(stored) : REFRESH_SECONDS
+  countdown.value = refreshSeconds
+}
+
+const startCountdown = () => {
+  if (countdownInterval) clearInterval(countdownInterval)
+  countdownInterval = setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--
+    }
+  }, 1000)
+}
+
 const fetchConfig = async () => {
   try {
     const response = await fetch(`/api/v1/config`, { credentials: 'include' })
@@ -247,13 +274,22 @@ const handleDocumentClick = (event) => {
   }
 }
 
+// Listen for data refresh from Settings component
+const handleRefreshData = () => {
+  updateLastUpdated()
+}
+
 // Fetch config on mount and set up interval
 onMounted(() => {
   fetchConfig()
+  updateLastUpdated()
+  startCountdown()
   // Refresh config every 10 minutes for announcements
   configInterval = setInterval(fetchConfig, 600000)
   // Add click listener for closing persistent tooltips
   document.addEventListener('click', handleDocumentClick)
+  // Listen for refresh events
+  window.addEventListener('gatus:data-refreshed', handleRefreshData)
 })
 
 // Clean up interval on unmount
@@ -262,7 +298,11 @@ onUnmounted(() => {
     clearInterval(configInterval)
     configInterval = null
   }
-  // Remove click listener
+  if (countdownInterval) {
+    clearInterval(countdownInterval)
+    countdownInterval = null
+  }
   document.removeEventListener('click', handleDocumentClick)
+  window.removeEventListener('gatus:data-refreshed', handleRefreshData)
 })
 </script>

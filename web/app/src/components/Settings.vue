@@ -37,7 +37,7 @@
       <!-- Theme Toggle -->
       <button
         @click="toggleDarkMode"
-        :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+        :aria-label="darkMode ? '切换至浅色模式' : '切换至深色模式'"
         class="p-1.5 rounded-full hover:bg-accent transition-colors group relative"
       >
         <Sun v-if="darkMode" class="h-3.5 w-3.5 transition-all" />
@@ -45,7 +45,7 @@
         
         <!-- Tooltip -->
         <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-          {{ darkMode ? 'Light mode' : 'Dark mode' }}
+          {{ darkMode ? '浅色模式' : '深色模式' }}
         </div>
       </button>
     </div>
@@ -112,6 +112,7 @@ const setRefreshInterval = (seconds) => {
 
 const refreshData = () => {
   emit('refreshData')
+  window.dispatchEvent(new CustomEvent('gatus:data-refreshed'))
 }
 
 const selectRefreshInterval = (value) => {

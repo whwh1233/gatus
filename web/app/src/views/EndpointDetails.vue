@@ -4,7 +4,7 @@
       <div class="mb-6">
         <Button variant="ghost" class="mb-4" @click="goBack">
           <ArrowLeft class="h-4 w-4 mr-2" />
-          Back to Dashboard
+          返回仪表盘
         </Button>
         
         <div v-if="endpointStatus && endpointStatus.name" class="space-y-6">
@@ -23,16 +23,16 @@
           <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader class="pb-2">
-                <CardTitle class="text-sm font-medium text-muted-foreground">Current Status</CardTitle>
+                <CardTitle class="text-sm font-medium text-muted-foreground">当前状态</CardTitle>
               </CardHeader>
               <CardContent>
-                <div class="text-2xl font-bold">{{ currentHealthStatus === 'healthy' ? 'Operational' : 'Issues Detected' }}</div>
+                <div class="text-2xl font-bold">{{ currentHealthStatus === 'healthy' ? '运行正常' : '检测到异常' }}</div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader class="pb-2">
-                <CardTitle class="text-sm font-medium text-muted-foreground">Avg Response Time</CardTitle>
+                <CardTitle class="text-sm font-medium text-muted-foreground">平均响应时间</CardTitle>
               </CardHeader>
               <CardContent>
                 <div class="text-2xl font-bold">{{ pageAverageResponseTime }}</div>
@@ -41,7 +41,7 @@
 
             <Card>
               <CardHeader class="pb-2">
-                <CardTitle class="text-sm font-medium text-muted-foreground">Response Time Range</CardTitle>
+                <CardTitle class="text-sm font-medium text-muted-foreground">响应时间范围</CardTitle>
               </CardHeader>
               <CardContent>
                 <div class="text-2xl font-bold">{{ pageResponseTimeRange }}</div>
@@ -50,7 +50,7 @@
 
             <Card>
               <CardHeader class="pb-2">
-                <CardTitle class="text-sm font-medium text-muted-foreground">Last Check</CardTitle>
+                <CardTitle class="text-sm font-medium text-muted-foreground">最近检测</CardTitle>
               </CardHeader>
               <CardContent>
                 <div class="text-2xl font-bold">{{ lastCheckTime }}</div>
@@ -61,13 +61,13 @@
           <Card>
             <CardHeader>
               <div class="flex items-center justify-between">
-                <CardTitle>Recent Checks</CardTitle>
+                <CardTitle>近期检测记录</CardTitle>
                 <div class="flex items-center gap-2">
                   <Button 
                     variant="ghost" 
                     size="icon"
                     @click="toggleShowAverageResponseTime"
-                    :title="showAverageResponseTime ? 'Show min-max response time' : 'Show average response time'"
+                    :title="showAverageResponseTime ? '显示最小-最大响应时间' : '显示平均响应时间'"
                   >
                     <Activity v-if="showAverageResponseTime" class="h-5 w-5" />
                     <Timer v-else class="h-5 w-5" />
@@ -76,7 +76,7 @@
                     variant="ghost" 
                     size="icon" 
                     @click="fetchData"
-                    title="Refresh data"
+                    title="刷新数据"
                     :disabled="isRefreshing"
                   >
                     <RefreshCw :class="['h-4 w-4', isRefreshing && 'animate-spin']" />
@@ -105,14 +105,14 @@
             <Card>
               <CardHeader>
                 <div class="flex items-center justify-between">
-                  <CardTitle>Response Time Trend</CardTitle>
+                  <CardTitle>响应时间趋势</CardTitle>
                   <select 
                     v-model="selectedChartDuration"
                     class="text-sm bg-background border rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="24h">24 hours</option>
-                    <option value="7d">7 days</option>
-                    <option value="30d">30 days</option>
+                    <option value="24h">24 小时</option>
+                    <option value="7d">7 天</option>
+                    <option value="30d">30 天</option>
                   </select>
                 </div>
               </CardHeader>
@@ -131,7 +131,7 @@
               <Card v-for="period in ['30d', '7d', '24h', '1h']" :key="period">
                 <CardHeader class="pb-2">
                   <CardTitle class="text-sm font-medium text-muted-foreground text-center">
-                    {{ period === '30d' ? 'Last 30 days' : period === '7d' ? 'Last 7 days' : period === '24h' ? 'Last 24 hours' : 'Last hour' }}
+                    {{ period === '30d' ? '最近 30 天' : period === '7d' ? '最近 7 天' : period === '24h' ? '最近 24 小时' : '最近 1 小时' }}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -143,13 +143,13 @@
 
           <Card>
             <CardHeader>
-              <CardTitle>Uptime Statistics</CardTitle>
+              <CardTitle>可用率统计</CardTitle>
             </CardHeader>
             <CardContent>
               <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div v-for="period in ['30d', '7d', '24h', '1h']" :key="period" class="text-center">
                   <p class="text-sm text-muted-foreground mb-2">
-                    {{ period === '30d' ? 'Last 30 days' : period === '7d' ? 'Last 7 days' : period === '24h' ? 'Last 24 hours' : 'Last hour' }}
+                    {{ period === '30d' ? '最近 30 天' : period === '7d' ? '最近 7 天' : period === '24h' ? '最近 24 小时' : '最近 1 小时' }}
                   </p>
                   <img :src="generateUptimeBadgeImageURL(period)" :alt="`${period} uptime`" class="mx-auto" />
                 </div>
@@ -159,7 +159,7 @@
 
           <Card>
             <CardHeader>
-              <CardTitle>Current Health</CardTitle>
+              <CardTitle>当前健康状态</CardTitle>
             </CardHeader>
             <CardContent>
               <div class="text-center">
@@ -170,7 +170,7 @@
 
           <Card v-if="events && events.length > 0">
             <CardHeader>
-              <CardTitle>Events</CardTitle>
+              <CardTitle>事件记录</CardTitle>
             </CardHeader>
             <CardContent>
               <div class="space-y-4">
@@ -326,24 +326,24 @@ const fetchData = async () => {
           let event = data.events[i]
           if (i === data.events.length - 1) {
             if (event.type === 'UNHEALTHY') {
-              event.fancyText = 'Endpoint is unhealthy'
+              event.fancyText = '服务异常'
             } else if (event.type === 'HEALTHY') {
-              event.fancyText = 'Endpoint is healthy'
+              event.fancyText = '服务正常'
             } else if (event.type === 'START') {
-              event.fancyText = 'Monitoring started'
+              event.fancyText = '开始监控'
             }
           } else {
             let nextEvent = data.events[i + 1]
             if (event.type === 'HEALTHY') {
-              event.fancyText = 'Endpoint became healthy'
+              event.fancyText = '服务已恢复正常'
             } else if (event.type === 'UNHEALTHY') {
               if (nextEvent) {
-                event.fancyText = 'Endpoint was unhealthy for ' + generatePrettyTimeDifference(nextEvent.timestamp, event.timestamp)
+                event.fancyText = '服务异常持续 ' + generatePrettyTimeDifference(nextEvent.timestamp, event.timestamp)
               } else {
-                event.fancyText = 'Endpoint became unhealthy'
+                event.fancyText = '服务出现异常'
               }
             } else if (event.type === 'START') {
-              event.fancyText = 'Monitoring started'
+              event.fancyText = '开始监控'
             }
           }
           event.fancyTimeAgo = generatePrettyTimeAgo(event.timestamp)
